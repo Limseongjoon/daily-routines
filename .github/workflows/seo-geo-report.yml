@@ -4,7 +4,9 @@ on:
   schedule:
     - cron: '0 23 * * *'  # KST 08:00 (UTC 23:00 전날)
   workflow_dispatch:       # 수동 실행 가능
-
+permissions:
+  id-token: write
+  contents: read
 jobs:
   seo-geo-report:
     runs-on: ubuntu-latest
@@ -15,7 +17,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run SEO/GEO Daily Report
-        uses: anthropics/claude-code-action@beta
+        uses: anthropics/claude-code-base-action@beta
         with:
           claude_access_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           allowed_tools: "WebSearch,mcp__Slack__slack_send_message,mcp__Slack__slack_search_users,mcp__Slack__slack_search_channels,mcp__Slack__slack_read_channel,mcp__Slack__slack_read_thread,mcp__Slack__slack_read_user_profile,mcp__Slack__slack_search_public"
