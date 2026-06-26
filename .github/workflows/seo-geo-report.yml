@@ -146,11 +146,9 @@ jobs:
             ## Slack 발송
 
             리포트 작성 후 Slack 도구로 DM 발송한다.
-
-            1. mcp__Slack__slack_search_users 로 이메일 seongjoon@inblog.ai 검색해 user_id 확인
-            2. 이메일 검색 실패 시 이름 "Seongjoon"으로 재검색
-            3. 찾은 user_id를 channel_id로 사용해 DM 발송
-
+            
+            channel_id: U04NW44HJ8L (고정값, 별도 검색 불필요)
+            
             발송 순서:
             - 첫 메시지: 제목 + 한 줄 브리핑 전체 (*굵게*, _기울임_, >인용 Slack 마크다운 사용)
             - 스레드 답글: 상세 (항목이 많으면 여러 답글로 분리)
