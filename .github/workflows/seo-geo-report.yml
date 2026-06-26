@@ -18,8 +18,11 @@ jobs:
 
       - name: Run SEO/GEO Daily Report
         uses: anthropics/claude-code-base-action@beta
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_TEAM_ID: ${{ secrets.SLACK_TEAM_ID }}
         with:
-          claude_access_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           allowed_tools: "WebSearch,mcp__Slack__slack_send_message,mcp__Slack__slack_search_users,mcp__Slack__slack_search_channels,mcp__Slack__slack_read_channel,mcp__Slack__slack_read_thread,mcp__Slack__slack_read_user_profile,mcp__Slack__slack_search_public"
           mcp_config: |
             {
