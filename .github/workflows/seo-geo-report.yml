@@ -25,7 +25,7 @@ jobs:
         with:
           model: "claude-sonnet-4-6"
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          allowed_tools: "WebSearch,mcp__Slack__slack_send_message,mcp__Slack__slack_search_users,mcp__Slack__slack_search_channels,mcp__Slack__slack_read_channel,mcp__Slack__slack_read_thread,mcp__Slack__slack_read_user_profile,mcp__Slack__slack_search_public,mcp__Slack__slack_get_users,mcp__Slack__slack_list_channels"
+          allowed_tools: "WebSearch,mcp__Slack__slack_post_message,mcp__Slack__slack_search_users,mcp__Slack__slack_search_channels,mcp__Slack__slack_read_channel,mcp__Slack__slack_read_thread,mcp__Slack__slack_read_user_profile,mcp__Slack__slack_search_public,mcp__Slack__slack_get_users,mcp__Slack__slack_list_channels"
           mcp_config: |
             {
               "mcpServers": {
