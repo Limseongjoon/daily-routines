@@ -1,0 +1,19 @@
+name: Daily Neopress Conversation Usability
+
+on:
+  schedule:
+    - cron: '0 22 * * 1,4' # 7:00 AM KST, 화·금
+  workflow_dispatch:
+
+jobs:
+  create-neopress-usability-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Daily Neopress Conversation Usability Check
+        run: |
+          response=$(curl -s -X POST https://api.linear.app/graphql \
+            -H "Authorization: ${{ secrets.LINEAR_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"query":"mutation{issueCreate(input:{title:\"Daily Neopress Conversation Usability Check\",teamId:\"a396ad9b-a75b-47b1-9ebd-874b5655b879\",assigneeId:\"3d716c59-d1c7-419f-b9a9-63c21ff97c42\",stateId:\"05478fae-e5f6-47a3-8c70-806b970bf582\"}){success issue{identifier title url}}}"}')
+          echo "$response"
+          echo "$response" | grep -q '"success":true' || exit 1
