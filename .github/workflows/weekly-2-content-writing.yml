@@ -1,4 +1,4 @@
-name: Weekly 2 Content Writing
+name: Weekly Neopress Content Writing
 
 on:
   schedule:
@@ -11,11 +11,95 @@ jobs:
 
     steps:
       - name: Create Weekly Neopress Content Writing Task
+        env:
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
         run: |
-          response=$(curl -s -X POST https://api.linear.app/graphql \
-            -H "Authorization: ${{ secrets.LINEAR_API_KEY }}" \
+          # 1. 콘텐츠 작성, Neopress 라벨 ID 조회
+          labels_payload=$(jq -n \
+            --arg query '
+              query {
+                issueLabels(
+                  filter: {
+                    name: {
+                      in: ["콘텐츠 작성", "Neopress"]
+                    }
+                  }
+                ) {
+                  nodes {
+                    id
+                    name
+                  }
+                }
+              }
+            ' \
+            '{query: $query}')
+
+          labels_response=$(curl -s -X POST https://api.linear.app/graphql \
+            -H "Authorization: $LINEAR_API_KEY" \
             -H "Content-Type: application/json" \
-            -d '{"query":"mutation{issueCreate(input:{title:\"Weekly Neopress Content Writing — 2 Contents\",description:\"이번 주 Neopress 콘텐츠 2개를 기획하고 작성합니다.\",teamId:\"a396ad9b-a75b-47b1-9ebd-874b5655b879\",assigneeId:\"3d716c59-d1c7-419f-b9a9-63c21ff97c42\",stateId:\"05478fae-e5f6-47a3-8c70-806b970bf582\"}){success issue{identifier title url}}}"}')
+            -d "$labels_payload")
+
+          echo "$labels_response"
+
+          content_label_id=$(echo "$labels_response" | jq -r '
+            .data.issueLabels.nodes[]
+            | select(.name == "콘텐츠 작성")
+            | .id
+          ' | head -n 1)
+
+          neopress_label_id=$(echo "$labels_response" | jq -r '
+            .data.issueLabels.nodes[]
+            | select(.name == "Neopress")
+            | .id
+          ' | head -n 1)
+
+          if [ -z "$content_label_id" ] || [ "$content_label_id" = "null" ]; then
+            echo "콘텐츠 작성 라벨을 찾을 수 없습니다."
+            exit 1
+          fi
+
+          if [ -z "$neopress_label_id" ] || [ "$neopress_label_id" = "null" ]; then
+            echo "Neopress 라벨을 찾을 수 없습니다."
+            exit 1
+          fi
+
+          # 2. 두 라벨이 적용된 Linear 이슈 생성
+          issue_payload=$(jq -n \
+            --arg title "콘텐츠 작성(주 2회: 한/영)" \
+            --arg teamId "a396ad9b-a75b-47b1-9ebd-874b5655b879" \
+            --arg assigneeId "3d716c59-d1c7-419f-b9a9-63c21ff97c42" \
+            --arg stateId "05478fae-e5f6-47a3-8c70-806b970bf582" \
+            --arg contentLabelId "$content_label_id" \
+            --arg neopressLabelId "$neopress_label_id" \
+            '{
+              query: "mutation IssueCreate($input: IssueCreateInput!) {
+                issueCreate(input: $input) {
+                  success
+                  issue {
+                    identifier
+                    title
+                    url
+                  }
+                }
+              }",
+              variables: {
+                input: {
+                  title: $title,
+                  teamId: $teamId,
+                  assigneeId: $assigneeId,
+                  stateId: $stateId,
+                  labelIds: [
+                    $contentLabelId,
+                    $neopressLabelId
+                  ]
+                }
+              }
+            }')
+
+          response=$(curl -s -X POST https://api.linear.app/graphql \
+            -H "Authorization: $LINEAR_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "$issue_payload")
 
           echo "$response"
-          echo "$response" | grep -q '"success":true' || exit 1
+          echo "$response" | jq -e '.data.issueCreate.success == true' > /dev/null
