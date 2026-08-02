@@ -14,14 +14,27 @@ jobs:
         env:
           LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
         run: |
-          # 1. 콘텐츠 작성, Neopress 라벨 ID 조회
-          labels_payload=$(jq -n \
+          # 콘텐츠 작성 프로젝트와 Neopress 라벨 조회
+          metadata_payload=$(jq -n \
             --arg query '
               query {
+                projects(
+                  filter: {
+                    name: {
+                      eq: "콘텐츠 작성"
+                    }
+                  }
+                ) {
+                  nodes {
+                    id
+                    name
+                  }
+                }
+
                 issueLabels(
                   filter: {
                     name: {
-                      in: ["콘텐츠 작성", "Neopress"]
+                      eq: "Neopress"
                     }
                   }
                 ) {
@@ -34,27 +47,27 @@ jobs:
             ' \
             '{query: $query}')
 
-          labels_response=$(curl -s -X POST https://api.linear.app/graphql \
+          metadata_response=$(curl -s -X POST https://api.linear.app/graphql \
             -H "Authorization: $LINEAR_API_KEY" \
             -H "Content-Type: application/json" \
-            -d "$labels_payload")
+            -d "$metadata_payload")
 
-          echo "$labels_response"
+          echo "$metadata_response"
 
-          content_label_id=$(echo "$labels_response" | jq -r '
-            .data.issueLabels.nodes[]
+          project_id=$(echo "$metadata_response" | jq -r '
+            .data.projects.nodes[]
             | select(.name == "콘텐츠 작성")
             | .id
           ' | head -n 1)
 
-          neopress_label_id=$(echo "$labels_response" | jq -r '
+          neopress_label_id=$(echo "$metadata_response" | jq -r '
             .data.issueLabels.nodes[]
             | select(.name == "Neopress")
             | .id
           ' | head -n 1)
 
-          if [ -z "$content_label_id" ] || [ "$content_label_id" = "null" ]; then
-            echo "콘텐츠 작성 라벨을 찾을 수 없습니다."
+          if [ -z "$project_id" ] || [ "$project_id" = "null" ]; then
+            echo "콘텐츠 작성 프로젝트를 찾을 수 없습니다."
             exit 1
           fi
 
@@ -63,14 +76,14 @@ jobs:
             exit 1
           fi
 
-          # 2. 두 라벨이 적용된 Linear 이슈 생성
+          # 프로젝트와 라벨을 지정해 이슈 생성
           issue_payload=$(jq -n \
             --arg title "콘텐츠 작성(주 2회: 한/영)" \
             --arg teamId "a396ad9b-a75b-47b1-9ebd-874b5655b879" \
             --arg assigneeId "3d716c59-d1c7-419f-b9a9-63c21ff97c42" \
             --arg stateId "05478fae-e5f6-47a3-8c70-806b970bf582" \
-            --arg contentLabelId "$content_label_id" \
-            --arg neopressLabelId "$neopress_label_id" \
+            --arg projectId "$project_id" \
+            --arg labelId "$neopress_label_id" \
             '{
               query: "mutation IssueCreate($input: IssueCreateInput!) {
                 issueCreate(input: $input) {
@@ -88,10 +101,8 @@ jobs:
                   teamId: $teamId,
                   assigneeId: $assigneeId,
                   stateId: $stateId,
-                  labelIds: [
-                    $contentLabelId,
-                    $neopressLabelId
-                  ]
+                  projectId: $projectId,
+                  labelIds: [$labelId]
                 }
               }
             }')
