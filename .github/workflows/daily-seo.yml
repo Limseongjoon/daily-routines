@@ -2,7 +2,7 @@ name: Daily SEO Routine
 
 on:
   schedule:
-    - cron: '0 22 * * 1-5' # 7:00 AM KST, 월~금
+    - cron: '0 22 * * 0-4' # UTC: Sun–Thu 22:00 => KST: Mon–Fri 07:00 (한국시간 월~금 07:00)
   workflow_dispatch:
 
 jobs:
@@ -14,6 +14,6 @@ jobs:
           response=$(curl -s -X POST https://api.linear.app/graphql \
             -H "Authorization: ${{ secrets.LINEAR_API_KEY }}" \
             -H "Content-Type: application/json" \
-            -d '{"query":"mutation{issueCreate(input:{title:\"Daily SEO & GEO Check\",teamId:\"a396ad9b-a75b-47b1-9ebd-874b5655b879\",assigneeId:\"3d716c59-d1c7-419f-b9a9-63c21ff97c42\",stateId:\"05478fae-e5f6-47a3-8c70-806b970bf582\"}){success issue{identifier title url}}}"}')
+            -d '{"query":"mutation{issueCreate(input:{title:\"Daily SEO & GEO Check\",teamId:\"a396ad9b-a75b-47b1-9ebd-874b5655b879\",assigneeId:\"3d716c59-d1c7-419f-b9a9-63c21ff97c42\",stateId:\"[...]\"}){success}}"}' )
           echo "$response"
           echo "$response" | grep -q '"success":true' || exit 1
