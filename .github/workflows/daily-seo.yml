@@ -2,7 +2,7 @@ name: Daily SEO Routine
 
 on:
   schedule:
-    - cron: '0 22 * * 0-4' # 7:00 AM KST, 월~금
+    - cron: '0 22 * * 1-5' # 7:00 AM KST, 월~금
   workflow_dispatch:
 
 jobs:
